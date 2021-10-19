@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Lincoln Supermarket</title>
+    <style>
+        .container {
+            background-color: #f0f0f0;
+            padding: 10px;
+            box-sizing: border-box;
+            border: solid black 2px;
+            min-width: 1200px;
+        }
+
+        button,
+        input[type='month'] {
+            width: 20%;
+            min-width: 200px;
+        }
+
+        label {
+            width: 15%;
+            text-align: right;
+            min-width: 150px;
+            margin-right: 10px;
+        }
+
+        input[type='text'] {
+            width: 250px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        legend {
+            width: 100%;
+        }
+
+        fieldset {
+            border: 1px black solid;
+            padding: 10px 10px;
+            margin: 5px;
+        }
+
+        .content {
+            display: flex;
+            flex-flow: wrap;
+            justify-content: space-evenly;
+            width: 100%;
+            margin: 0 0 10px
+        }
+
+        fieldset.custInfo select {
+            width: 30%;
+        }
+
+        .itemInput,
+        .itemOutput {
+            width: 40%;
+        }
+
+        .itemInput input {
+            margin: 5px 5px;
+        }
+
+        .itemOutput button {
+            margin-top: 10px;
+        }
+
+        .infoDemon {
+            width: 100%;
+            height: 200px;
+            background-color: white;
+            overflow-y: scroll;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .invisible {
+            visibility: hidden;
+        }
+
+        .previous {
+            display: none;
+        }
+
+        .monthlyInfo {
+            display: flex;
+            justify-content: space-evenly;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+        </script>
+    <script>
+        $(document).ready(function () {
+
+            function clear() {
+                $(".itemInput input[type='text']")
+                    .each(function (i) {
+                        this.value = ''
+                    })
+                $('.infoDemon').text('')
+                $("input[name='itemType']").each(function () {
+                    this.checked = false
+                })
+                $('.weight, .unit').addClass('hidden')
+                $('#totalCost').attr('value', '')
+            }
+
+            function nextCust() {
+                $('#custName').children('option').each(function () {
+                    if (this.value === '') {
+                        this.selected = true
+                    }
+                })
+                $('#custID').attr('value', '')
+                $('.previous').text('')
+                clear()
+            }
+
+            function validCust() {
+                let flag
+                if ($('#custName option:selected').attr('value') === '') {
+                    alert('Please select a Customer first')
+                    flag = false
+                } else {
+                    flag = true
+                }
+                return flag
+            }
+
+            function getUrl(action) {
+                let custID = $('#custName option:selected').attr('value')
+                return `http://127.0.0.1:5000//api/${action}/${custID}/`
+            }
+
+            const infoDemon = $(".infoDemon")
+            let urlRoot = `http://127.0.0.1:5000//api`
+            $('#custName').change(function (e) {
+                let preNod = $('.previous')
+                let previous = preNod.text()
+                let current = $('#custName option:selected').attr('value')
+                function changeID() {
+                    $('#custID').attr('value', current)
+                    preNod.text(current)
+                }
+                if (previous) {
+                    let url = `${urlRoot}/next/${previous}/`
+                    $.get(url, function (result) {
+                        if (result.data) {
+                            if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                                changeID()
+                                clear()
+                            } else {
+                                $('#custName').children('option').each(function () {
+                                    if (this.value === previous) {
+                                        this.selected = true
+                                    }
+                                })
+                            }
+                        } else {
+                            changeID()
+                            clear()
+                        }
+                    })
+                } else {
+                    changeID()
+                }
+
+            })
+
+            $("#start").click(function (e) {
+                if (validCust()) {
+                    let url = getUrl('start')
+                    $.get(url, function (resp) {
+                        if (resp.msg !== '') {
+                            alert(resp.msg)
+                            infoDemon.html(resp.data.replace(/[\n]/g, "<br/>"))
+                        } else {
+                            clear()
+                        }
+                        $("#transContent").removeClass("invisible")
+                    })
+                }
+            })
+
+            $('#next').click(function (e) {
+                 if($('.previous').text()){
+                    $.get(getUrl('next'), function (result) {
+                        if (result.data) {
+                            if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                                nextCust()
+                            }
+                        } else {
+                            nextCust()
+                        }
+                    })
+                 }
+
+                
+            })
+
+            $('#exit').click(function (e) {
+                $("#transContent").addClass("invisible")
+                nextCust()
+            })
+
+            $("#custInfo").click(function (e) {
+                if (validCust()) {
+                    $.get(getUrl('custDetail'), function (result) {
+                        console.log(result.data)
+                        $('#custDetail-modal-body').html(result.data.replace(/[\n]/g, "<br/>"))
+                    })
+                    var modal = new bootstrap.Modal(document.getElementById('custDetail'))
+                    modal.show()
+                }
+            })
+
+            $('.itemType').change(function (e) {
+                const unit = $('.unit')
+                const weight = $('.weight')
+                if (e.target.getAttribute('value') === "unitItem") {
+                    weight.addClass("hidden")
+                    unit.removeClass("hidden")
+                } else {
+                    unit.addClass("hidden")
+                    weight.removeClass("hidden")
+                }
+            })
+
+            $('#addCart').click(function (e) {
+                let data = $("form").serializeArray();
+                $.post({
+                    url: getUrl('item'),
+                    data,
+                    success: function (result) {
+                        let { status, data, msg } = result
+                        if (status === 1) {
+                            infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
+                            document.getElementById("weight").value = data.weight ? data.weight : ''
+                        } else {
+                            alert(msg)
+                        }
+                    }
+                })
+            })
+
+            $('#newItem').click(function (e) {
+                let inputs = $(".itemInput input[type='text']")
+                    .each(function (i) {
+                        this.value = ''
+                    })
+                $('.infoDemon').text('')
+            })
+
+            $('#checkout').click(function (e) {
+                $.get(getUrl('checkout'), function (result) {
+                    let { status, data, msg } = result
+                    if (status === 1) {
+                        infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
+                        $('#totalCost').attr('value', data.cost)
+                    }
+                })
+            })
+
+            function modalDemo(idName,args='') {
+                $.get(`${urlRoot}/${idName}/${args}`, function (result) {
+                    let { data } = result
+                    if (result.status === 1) {
+                        $(`#${idName}-modal-body`).html(data.replace(/[\n]/g, "<br/>"))
+                    } else {
+                        console.log(result.msg)
+                        $(`#${idName}-modal-body`).text(result.msg)
+                    }
+                })
+                var modal = new bootstrap.Modal(document.getElementById(`${idName}`))
+                modal.show()
+            }
+
+            $('#saleByCustBtn').click(function () {
+                modalDemo('saleByCust')
+            })
+
+            $('#totalSaleBtn').click(function () {
+                modalDemo('totalSale')
+            })
+
+            $('#topCustBtn').click(function () {
+                modalDemo('topCust')
+            })
+            $('#avgCartBtn').click(function () {
+                modalDemo('avgCart')
+            })
+
+            $('#monthlySaleBtn').click(function (e) {
+                let monthPicker = document.getElementById("monthPicker")
+                let month = monthPicker.value
+                if (!month) {
+                    alert("Please pick a Month first.")
+                    monthPicker.focus()
+                } else {
+                    let date = month.split('-')
+                    modalDemo('monthlySale',`${date[0]}/${date[1]}/`)
+                }
+            })
+        })
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Lincoln Supermarket</h1>
+        <form>
+            <fieldset class="custInfo">
+                <legend>Customer Detail</legend>
+                <div class="content">
+                    <div class="content">
+                        <label for="custName">Customer Name: </label>
+                        <select id="custName">
+                            <option value="" selected id="option">Select</option>
+                            {% for i in custs.values()%}
+                            <option value="{{i.cardID}}">{{i.name}}</option>
+                            {%endfor%}
+                        </select>
+                        <label for="custID" >Card Number: </label>
+                        <input type="text" id="custID" value="" disabled>
+                        <span class="previous"></span>
+
+                    </div>
+                    <button type="button" id="start">Start Shopping</button>
+                    <button type="button" id="next">Next Customer</button>
+                    <button type="button" id="exit">Exit</button>
+                    <button type="button" id="custInfo">Customer Information</button>
+                </div>
+
+            </fieldset>
+
+            <fieldset class="transcation">
+                <legend>Transaction</legend>
+                <div class="content invisible" id="transContent">
+                    <div class="itemInput ">
+                        <label for="itemName">Product Name: </label>
+                        <input type="text" id="itemName" name="itemName">
+                        <fieldset class="itemType">
+                            <label for="unitItem">Unit Item</label>
+                            <input type="radio" name="itemType" value="unitItem" id="unitItem">
+                            <label for="weightItem">Weight Item</label>
+                            <input type="radio" name="itemType" value="weightItem" id="weightItem">
+
+
+                        </fieldset>
+
+                        <fieldset class="unit hidden">
+                            <legend>Unit Item</legend>
+                            <label for="unitPrice">Price per Unit: </label>
+                            <input type="text" id="unitPrice" name="unitPrice">
+                            <label for="quantity">Number of Units: </label>
+                            <input type="text" id="quantity" name="quantity">
+                        </fieldset>
+                        <fieldset class="weight hidden">
+                            <legend>Weight Item</legend>
+                            <label for="weightPrice">Price per Kilo: </label>
+                            <input type="text" id="weightPrice" name="weightPrice">
+                            <label for="weight">Weight: </label>
+                            <input type="text" id="weight" disabled>
+                        </fieldset>
+                    </div>
+                    <div class="itemOutput">
+                        <div class="infoDemon"></div>
+                        <div class="content">
+                            <button type="button" id="addCart">Add to Cart</button>
+                            <button type="button" id="newItem">New Item</button>
+                            <button type="button" id="checkout">Checkout</button>
+                        </div>
+                        <label for="totalCost">Total Cost:</label>
+                        <input type="text" id="totalCost" value="" disabled>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="summary">
+                <legend>Summary</legend>
+                <div class="content">
+                    <button type="button" id="saleByCustBtn">Sales by Customer</button>
+                    <button type="button" id="totalSaleBtn">Total Sales</button>
+                    <button type="button" id="topCustBtn">Top Customer</button>
+                    <button type="button" id="avgCartBtn">Average Cart</button>
+                </div>
+                <div class="content">
+                    <input type="month" name="month" id="monthPicker">
+                    <button type="button" id="monthlySaleBtn"> Sale of Month </button>
+                    <button class="invisible"></button>
+                    <button class="invisible"></button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <!-- Modal -->
+    {% macro modal(identity,title) %}
+    <div class="modal fade " id="{{identity}}" tabindex="-1" aria-labelledby="{{identity}}Label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{identity}}Label">{{title}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div style="height: 500px;" id="{{identity}}-modal-body"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endmacro %}
+
+    {% for i in [['custDetail','Customer Details'],
+    ['saleByCust','Sales by Customer'],
+    ['totalSale','Total Sales'],
+    ['topCust','Top Customer'],
+    ['avgCart','Average Cart'],
+    ['monthlySale','Sale of Month'],
+    ]%}
+    {{modal(*i)}}
+    {%endfor%}
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
