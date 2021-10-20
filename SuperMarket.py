@@ -9,7 +9,6 @@ from datetime import datetime as dt
 class SuperMarket:
     def __init__(self) -> None:
        self.customers:Dict[int,Customer] = {}
-       self.carts:List[Cart]=[]
         
     def createCustomer(self,name:str)->Customer:
         if isinstance(name,str):
@@ -97,13 +96,17 @@ class SuperMarket:
         if not cust:
             return MyResponse(0,'Incorrect Cunstomer Card ID.')
         cart = cust.checkout()
-        self.carts.append(cart)
-        return MyResponse(1,data={'cost':round(cart.cartValue,2) ,'info':cart.cartDetails()})
+        if cart.cartValue!=0:
+            response = MyResponse(1,data={'cost':round(cart.cartValue,2) ,'info':cart.cartDetails()})
+        else:
+            response = MyResponse(0,'Your shopping cart is empty, please pick products first.')
+        return response
 
     def getTotalSales(self)->MyResponse:
         totalSales = 0
-        for cart in self.carts:
-            totalSales += cart.cartValue
+        for cust in self.customers.values():
+            for cart in cust.historyCarts:
+                totalSales += cart.cartValue
         info = f'As of {dt.now().strftime("%d/%m/%Y %H:%M:%S")}, total revenues were {round(totalSales,2)}'
         return MyResponse(1,data= info )
     # not clear about the requirement

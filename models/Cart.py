@@ -2,10 +2,7 @@ from datetime import datetime as dt
 from models.Item import Item,WeightItem,UnitItem
 from typing import List
 class Cart:
-    CARTID = 1000000
     def __init__(self):
-        Cart.CARTID +=1
-        self.__cartID = Cart.CARTID
         # purchase time should be the time that the customer pay for this cart
         # update later togther with payment process 
         self.__purchaseTime = None
@@ -15,9 +12,6 @@ class Cart:
     
     # all the properties are not suposed to be changed directly from outside
     # methods to deal with them will be provided 
-    @property
-    def cartID(self):
-        return self.__cartID
     @property
     def purchaseTime(self):
         return self.__purchaseTime
@@ -39,12 +33,12 @@ class Cart:
 
         return item.itemDetail()
 
-    def checkout(self):
+    def checkout(self)->None:
         self.__purchaseTime = dt.now().strftime("%d/%m/%Y %H:%M:%S")
         self.__clubPoint = round(self.cartValue/10,2) 
 
     # method used to get cart detail information
-    def cartDetails(self):
+    def cartDetails(self)->str:
         info = f'{self.purchaseTime} Consumption: ${self.cartValue} Clubpoint:{self.__clubPoint}\n'
         for i in self.items:
             info += f'----{i.itemDetail()}\n'

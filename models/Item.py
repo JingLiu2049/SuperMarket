@@ -65,7 +65,7 @@ class WeightItem(Item):
         self.__weight = value
 
     # rewrite method to calculate weightitems cost
-    def getItemPrice(self):
+    def getItemPrice(self)->float:
         return round(self.weight * self.unitPrice,2) 
     
     def __scale(self):

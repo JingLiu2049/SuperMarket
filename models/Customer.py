@@ -78,10 +78,11 @@ class Customer:
     def checkout(self) -> Cart:
         self.currentCart.checkout()
         cart = self.currentCart
-        self.__totalValue = round(self.__totalValue+ cart.cartValue,2) 
-        self.__totalClubPoints = round(self.__totalClubPoints+cart.clubPoint, 2) 
-        self.__historyCarts.append(cart)
-        self.__currentCart = None
+        if len(cart.items)!=0:
+            self.__totalValue = round(self.__totalValue+ cart.cartValue,2) 
+            self.__totalClubPoints = round(self.__totalClubPoints+cart.clubPoint, 2) 
+            self.__historyCarts.append(cart)
+            self.__currentCart = None
         return cart
 
 if __name__ == "__main__":

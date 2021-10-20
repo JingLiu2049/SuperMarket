@@ -1,24 +1,37 @@
 from flask import Flask,jsonify,render_template,request
 from models.MyResponse import MyResponse
 from utils import *
+from functools import wraps
 
 app = Flask(__name__)
 sm = getSuperMarket()
 
+def commonError(func):
+    @wraps(func)
+    def inner(*args,**kwargs):
+        try:
+            response = func(*args,**kwargs)
+        except Exception as e:
+            print(e)
+            error = MyResponse(0,'Your connection is unstable, please try later.')
+            response = jsonify(error.__dict__)
+        return response
+    return inner
+  
 @app.route('/')
 def home():
     return render_template('home.html',custs = sm.customers)
 
 @app.route('/api/start/<int:custID>/')
+@commonError 
 def start(custID):
     response = sm.startShoping(custID)
     return jsonify(response.__dict__)
 
 @app.route('/api/item/<int:custID>/',methods=['POST'])
+@commonError 
 def item(custID):
     data = request.form
-    for i in data.values():
-        print(i)
     try:
         name = data['itemName']
         if data['itemType'] == 'unitItem':
@@ -29,35 +42,41 @@ def item(custID):
             wprice = float(data['weightPrice'])
             response = sm.addWeightItem(custID,name,wprice)
     except ValueError as ve:
-        response = MyResponse(0,'Item information missing, pelase check your input.')
+        response = MyResponse(0,'Item information incorrect, pelase check your input.')
     except KeyError as ke:
         response = MyResponse(0,'Item type has to be selected.')
     return jsonify(response.__dict__)
 
 @app.route('/api/next/<int:custID>/')
+@commonError 
 def next(custID):
     isCheckout = sm.isCheckout(custID)
     return jsonify(MyResponse(1,data=isCheckout).__dict__)
 
 @app.route('/api/checkout/<int:custID>/')
+@commonError 
 def checkout(custID):
     response = sm.checkout(custID)
     return jsonify(response.__dict__)
 
 @app.route('/api/custDetail/<int:custID>/')
+@commonError 
 def custDetail(custID):
     response = sm.getCustomerInfo(custID)
     return jsonify(response.__dict__)
     
 @app.route('/api/saleByCust/')
+@commonError 
 def saleByCust():
     return jsonify(sm.getSaleSum().__dict__)
 
 @app.route('/api/totalSale/')
+@commonError 
 def totalSale():
     return jsonify(sm.getTotalSales().__dict__)
 
 @app.route('/api/topCust/')
+@commonError 
 def topCust():
     try:
         response = sm.getStarCust()
@@ -66,11 +85,13 @@ def topCust():
     return jsonify(response.__dict__)
 
 @app.route('/api/avgCart/')
+@commonError 
 def avgCart():
     response =sm.getAvgExpense()
     return jsonify(response.__dict__)
 
 @app.route('/api/monthlySale/<int:year>/<int:month>/')
+@commonError 
 def monthlySale(year,month):
     return jsonify(sm.getMonthlySale(year,month).__dict__)
 

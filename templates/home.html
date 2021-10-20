@@ -131,6 +131,7 @@
                 let flag
                 if ($('#custName option:selected').attr('value') === '') {
                     alert('Please select a Customer first')
+                    $('#custName').focus()
                     flag = false
                 } else {
                     flag = true
@@ -156,39 +157,46 @@
                 if (previous) {
                     let url = `${urlRoot}/next/${previous}/`
                     $.get(url, function (result) {
-                        if (result.data) {
-                            if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                        if(result.status!==1){
+                            alert(result.msg)
+                        }else{
+                            if (result.data) {
+                                if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                                    changeID()
+                                    clear()
+                                } else {
+                                    $('#custName').children('option').each(function () {
+                                        if (this.value === previous) {
+                                            this.selected = true
+                                        }
+                                    })
+                                }
+                            } else {
                                 changeID()
                                 clear()
-                            } else {
-                                $('#custName').children('option').each(function () {
-                                    if (this.value === previous) {
-                                        this.selected = true
-                                    }
-                                })
                             }
-                        } else {
-                            changeID()
-                            clear()
                         }
                     })
                 } else {
                     changeID()
                 }
-
             })
 
             $("#start").click(function (e) {
                 if (validCust()) {
                     let url = getUrl('start')
                     $.get(url, function (resp) {
-                        if (resp.msg !== '') {
+                        if(resp.status!==1){
                             alert(resp.msg)
-                            infoDemon.html(resp.data.replace(/[\n]/g, "<br/>"))
-                        } else {
-                            clear()
+                        }else{
+                            if (resp.msg !== '') {
+                                alert(resp.msg)
+                                infoDemon.html(resp.data.replace(/[\n]/g, "<br/>"))
+                            } else {
+                                clear()
+                            }
+                            $("#transContent").removeClass("invisible")
                         }
-                        $("#transContent").removeClass("invisible")
                     })
                 }
             })
@@ -196,33 +204,24 @@
             $('#next').click(function (e) {
                  if($('.previous').text()){
                     $.get(getUrl('next'), function (result) {
-                        if (result.data) {
-                            if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                        if(result.status !==1){
+                            alert(result.msg)
+                        }else{
+                            if (result.data) {
+                                if (confirm("You haven't checkout, are you sure you want to leave?'")) {
+                                    nextCust()
+                                }
+                            } else {
                                 nextCust()
                             }
-                        } else {
-                            nextCust()
                         }
                     })
                  }
-
-                
             })
 
             $('#exit').click(function (e) {
                 $("#transContent").addClass("invisible")
                 nextCust()
-            })
-
-            $("#custInfo").click(function (e) {
-                if (validCust()) {
-                    $.get(getUrl('custDetail'), function (result) {
-                        console.log(result.data)
-                        $('#custDetail-modal-body').html(result.data.replace(/[\n]/g, "<br/>"))
-                    })
-                    var modal = new bootstrap.Modal(document.getElementById('custDetail'))
-                    modal.show()
-                }
             })
 
             $('.itemType').change(function (e) {
@@ -239,6 +238,7 @@
 
             $('#addCart').click(function (e) {
                 let data = $("form").serializeArray();
+               if(validCust()){
                 $.post({
                     url: getUrl('item'),
                     data,
@@ -252,6 +252,8 @@
                         }
                     }
                 })
+               } 
+                
             })
 
             $('#newItem').click(function (e) {
@@ -263,13 +265,17 @@
             })
 
             $('#checkout').click(function (e) {
-                $.get(getUrl('checkout'), function (result) {
-                    let { status, data, msg } = result
-                    if (status === 1) {
-                        infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
-                        $('#totalCost').attr('value', data.cost)
-                    }
-                })
+                if(validCust()){
+                    $.get(getUrl('checkout'), function (result) {
+                        let { status, data, msg } = result
+                        if (status === 1) {
+                            infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
+                            $('#totalCost').attr('value', data.cost)
+                        }else{
+                            alert(msg)
+                        }
+                    })
+                }
             })
 
             function modalDemo(idName,args='') {
@@ -278,27 +284,22 @@
                     if (result.status === 1) {
                         $(`#${idName}-modal-body`).html(data.replace(/[\n]/g, "<br/>"))
                     } else {
-                        console.log(result.msg)
                         $(`#${idName}-modal-body`).text(result.msg)
                     }
                 })
-                var modal = new bootstrap.Modal(document.getElementById(`${idName}`))
+                var modal = new bootstrap.Modal(document.getElementById(`${idName}-modal`))
                 modal.show()
             }
 
-            $('#saleByCustBtn').click(function () {
-                modalDemo('saleByCust')
+            $('body').on('click','.btns',function(){
+                modalDemo(this.id)
             })
 
-            $('#totalSaleBtn').click(function () {
-                modalDemo('totalSale')
-            })
-
-            $('#topCustBtn').click(function () {
-                modalDemo('topCust')
-            })
-            $('#avgCartBtn').click(function () {
-                modalDemo('avgCart')
+            $("#custInfo").click(function (e) {
+                if (validCust()) {
+                  let custid = $('.previous').text()  
+                  modalDemo('custDetail',custid)
+                }
             })
 
             $('#monthlySaleBtn').click(function (e) {
@@ -334,7 +335,6 @@
                         <label for="custID" >Card Number: </label>
                         <input type="text" id="custID" value="" disabled>
                         <span class="previous"></span>
-
                     </div>
                     <button type="button" id="start">Start Shopping</button>
                     <button type="button" id="next">Next Customer</button>
@@ -389,10 +389,10 @@
             <fieldset class="summary">
                 <legend>Summary</legend>
                 <div class="content">
-                    <button type="button" id="saleByCustBtn">Sales by Customer</button>
-                    <button type="button" id="totalSaleBtn">Total Sales</button>
-                    <button type="button" id="topCustBtn">Top Customer</button>
-                    <button type="button" id="avgCartBtn">Average Cart</button>
+                    <button type="button" id="saleByCust" class="btns">Sales by Customer</button>
+                    <button type="button" id="totalSale" class="btns">Total Sales</button>
+                    <button type="button" id="topCust" class="btns">Top Customer</button>
+                    <button type="button" id="avgCart" class="btns">Average Cart</button>
                 </div>
                 <div class="content">
                     <input type="month" name="month" id="monthPicker">
@@ -405,7 +405,7 @@
     </div>
     <!-- Modal -->
     {% macro modal(identity,title) %}
-    <div class="modal fade " id="{{identity}}" tabindex="-1" aria-labelledby="{{identity}}Label" aria-hidden="true">
+    <div class="modal fade " id="{{identity}}-modal" tabindex="-1" aria-labelledby="{{identity}}Label" aria-hidden="true">
         <div class="modal-dialog modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
