@@ -141,11 +141,11 @@
 
             function getUrl(action) {
                 let custID = $('#custName option:selected').attr('value')
-                return `http://127.0.0.1:5000//api/${action}/${custID}/`
+                return `/api/${action}/${custID}/`
             }
 
             const infoDemon = $(".infoDemon")
-            let urlRoot = `http://127.0.0.1:5000//api`
+            let urlRoot = `/api`
             $('#custName').change(function (e) {
                 let preNod = $('.previous')
                 let previous = preNod.text()
@@ -355,8 +355,6 @@
                             <input type="radio" name="itemType" value="unitItem" id="unitItem">
                             <label for="weightItem">Weight Item</label>
                             <input type="radio" name="itemType" value="weightItem" id="weightItem">
-
-
                         </fieldset>
 
                         <fieldset class="unit hidden">

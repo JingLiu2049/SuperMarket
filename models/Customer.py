@@ -85,9 +85,4 @@ class Customer:
             self.__currentCart = None
         return cart
 
-if __name__ == "__main__":
-    a = Customer('aaa')
-    b = Customer('bbb')
-    if a>b:
-        print(a)
-    
+
