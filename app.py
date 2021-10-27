@@ -32,8 +32,11 @@ def start(custID):
 @commonError 
 def item(custID):
     data = request.form
+    name = data['itemName']
+    if not name:
+        return jsonify(MyResponse(0,'Please input product name.').__dict__)
     try:
-        name = data['itemName']
+        print(name)
         if data['itemType'] == 'unitItem':
             uprice = float(data['unitPrice'])
             quantity = int(data['quantity'])

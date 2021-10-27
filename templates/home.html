@@ -239,21 +239,23 @@
             $('#addCart').click(function (e) {
                 let data = $("form").serializeArray();
                if(validCust()){
-                $.post({
-                    url: getUrl('item'),
-                    data,
-                    success: function (result) {
-                        let { status, data, msg } = result
-                        if (status === 1) {
-                            infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
-                            document.getElementById("weight").value = data.weight ? data.weight : ''
-                        } else {
-                            alert(msg)
+                   {
+                    $.post({
+                        url: getUrl('item'),
+                        data,
+                        success: function (result) {
+                            let { status, data, msg } = result
+                            if (status === 1) {
+                                infoDemon.html(data.info.replace(/[\n]/g, "<br/>"))
+                                document.getElementById("weight").value = data.weight ? data.weight : ''
+                            } else {
+                                alert(msg)
+                            }
                         }
-                    }
-                })
-               } 
+                    })
+                   }
                 
+               } 
             })
 
             $('#newItem').click(function (e) {

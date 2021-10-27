@@ -39,7 +39,15 @@ class Cart:
 
     # method used to get cart detail information
     def cartDetails(self)->str:
+        info = self.detailTitle()
+        info += self.cartItemsInfo()
+        return info
+
+    def detailTitle(self)->str:
         info = f'{self.purchaseTime} Consumption: ${self.cartValue} Clubpoint:{self.__clubPoint}\n'
+        return info
+    def cartItemsInfo(self)->str:
+        info = ''
         for i in self.items:
             info += f'----{i.itemDetail()}\n'
         return info

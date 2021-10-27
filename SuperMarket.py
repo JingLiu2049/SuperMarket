@@ -51,7 +51,8 @@ class SuperMarket:
             paras = {itemName:str,price:float,quantity:int}
             self.__paraCheck(paras)
             item = UnitItem(itemName, price, quantity)
-            info = cust.currentCart.addItem(item)
+            cust.currentCart.addItem(item)
+            info = cust.currentCart.cartItemsInfo()
             response = MyResponse(1,data = {'info':info})
         except TypeError as te:
             print(te)
@@ -68,7 +69,8 @@ class SuperMarket:
             paras = {itemName:str,price:float}
             self.__paraCheck(paras)
             item = WeightItem(itemName,price)
-            info = cust.currentCart.addItem(item)
+            cust.currentCart.addItem(item)
+            info = cust.currentCart.cartItemsInfo()
             response = MyResponse(1,data = {'info':info,'weight':item.weight})
         except TypeError as te:
             print(te)
@@ -119,10 +121,18 @@ class SuperMarket:
         return MyResponse(1,data=info)
 
     def getAvgExpense(self)->MyResponse:
+        
         info = ''
+        totalAvg = 0
+        totalCarts = 0
         for cust in self.customers.values():
             info += cust.getCustTitle()
-            info += f'Shopping {cust.calCarts()} times, Average: ${cust.getAverage()}\n'
+            avg = cust.getAverage()
+            totalAvg += avg
+            carts =cust.calCarts()
+            totalCarts += carts
+            info += f'Shopping {carts} times, Average: ${avg}\n'
+        info += f'Total transaction: {totalCarts} times, average consumption: ${totalAvg}'
         return MyResponse(1,data=info)
 
     def getStarCust(self)->MyResponse:
