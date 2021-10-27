@@ -104,11 +104,15 @@ class SuperMarket:
             response = MyResponse(0,'Your shopping cart is empty, please pick products first.')
         return response
 
-    def getTotalSales(self)->MyResponse:
+    def __calTotalSale(self) ->float:
         totalSales = 0
         for cust in self.customers.values():
             for cart in cust.historyCarts:
                 totalSales += cart.cartValue
+        return totalSales
+
+    def getTotalSales(self)->MyResponse:
+        totalSales = self.__calTotalSale()
         info = f'As of {dt.now().strftime("%d/%m/%Y %H:%M:%S")}, total revenues were {round(totalSales,2)}'
         return MyResponse(1,data= info )
     # not clear about the requirement
@@ -123,16 +127,14 @@ class SuperMarket:
     def getAvgExpense(self)->MyResponse:
         
         info = ''
-        totalAvg = 0
         totalCarts = 0
         for cust in self.customers.values():
             info += cust.getCustTitle()
-            avg = cust.getAverage()
-            totalAvg += avg
             carts =cust.calCarts()
             totalCarts += carts
-            info += f'Shopping {carts} times, Average: ${avg}\n'
-        info += f'Total transaction: {totalCarts} times, average consumption: ${totalAvg}'
+            info += f'Shopping {carts} times, Average: ${cust.getAverage()}\n'
+        totalAvg = round(self.__calTotalSale()/totalCarts,2)
+        info += f"Ttoal transaction: {totalCarts} times, Total average: ${totalAvg}"
         return MyResponse(1,data=info)
 
     def getStarCust(self)->MyResponse:
