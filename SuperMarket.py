@@ -97,6 +97,8 @@ class SuperMarket:
         cust = self.__getCust(custID)
         if not cust:
             return MyResponse(0,'Incorrect Cunstomer Card ID.')
+        if not cust.currentCart:
+            return MyResponse(0,'Your shopping cart is empty, please pick products first.')
         cart = cust.checkout()
         if cart.cartValue!=0:
             response = MyResponse(1,data={'cost':round(cart.cartValue,2) ,'info':cart.cartDetails()})
