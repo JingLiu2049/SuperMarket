@@ -42,7 +42,7 @@ class Cart:
         info = self.detailTitle()
         info += self.cartItemsInfo()
         return info
-
+    
     def detailTitle(self)->str:
         info = f'{self.purchaseTime} Consumption: ${self.cartValue} Clubpoint:{self.__clubPoint}\n'
         return info
