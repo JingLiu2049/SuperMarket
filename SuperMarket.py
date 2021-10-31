@@ -1,11 +1,13 @@
+import pytz
 from models import *
 from typing import Dict, List
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
+from pytz import timezone
 
 
 
 
-
+TZ = timezone('Pacific/Auckland')
 class SuperMarket:
     def __init__(self) -> None:
        self.customers:Dict[int,Customer] = {}
@@ -116,7 +118,10 @@ class SuperMarket:
     # method to calculate total sales 
     def getTotalSales(self)->MyResponse:
         totalSales = self.__calTotalSale()
-        info = f'As of {dt.now().strftime("%d/%m/%Y %H:%M:%S")}, total revenues were {round(totalSales,2)}'
+        utc_now = dt.now(timezone('UTC'))
+        lt = utc_now.astimezone(TZ).strftime("%d/%m/%Y %H:%M:%S")
+
+        info = f'As of {lt}, total revenues were {round(totalSales,2)}'
         return MyResponse(1,data= info )
     # method to get consumption summary for customers
     def getSaleSum(self)->MyResponse:
@@ -158,7 +163,7 @@ class SuperMarket:
         for cust in self.customers.values():
             monthCsump = 0
             for cart in cust.historyCarts:
-                time = dt.strptime(cart.purchaseTime,"%d/%m/%Y %H:%M:%S")
+                time = cart.purchaseTime.astimezone(TZ)
                 if time.year == year and time.month == month:
                     monthCsump += cart.cartValue
             if monthCsump != 0:

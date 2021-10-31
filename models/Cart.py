@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 from models.Item import Item,WeightItem,UnitItem
 from typing import List
+from pytz import timezone
 class Cart:
     def __init__(self):
         # purchase time should be the time that the customer pay for this cart
@@ -34,7 +35,8 @@ class Cart:
         return item.itemDetail()
 
     def checkout(self)->None:
-        self.__purchaseTime = dt.now().strftime("%d/%m/%Y %H:%M:%S")
+        now = dt.now(timezone('UTC'))
+        self.__purchaseTime = now
         self.__clubPoint = round(self.cartValue/10,2) 
 
     # method used to get cart detail information
@@ -44,7 +46,8 @@ class Cart:
         return info
     
     def detailTitle(self)->str:
-        info = f'{self.purchaseTime} Consumption: ${self.cartValue} Clubpoint:{self.__clubPoint}\n'
+        lt = self.purchaseTime.astimezone(timezone('Pacific/Auckland')).strftime("%d/%m/%Y %H:%M:%S")
+        info = f'{lt} Consumption: ${self.cartValue} Clubpoint:{self.__clubPoint}\n'
         return info
     def cartItemsInfo(self)->str:
         info = ''
